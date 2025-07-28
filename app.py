@@ -56,7 +56,8 @@ if page == "📊 EDA":
     st.pyplot(fig3)
 
     st.subheader("Pendapatan Harian")
-    df['order_date'] = pd.to_datetime(df['order_date'])
+    df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce', dayfirst=True)
+    df = df.dropna(subset=['order_date'])
     daily_revenue = df.groupby('order_date')['total_price'].sum()
     fig4, ax4 = plt.subplots(figsize=(12, 4))
     daily_revenue.plot(ax=ax4)
