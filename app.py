@@ -108,4 +108,4 @@ elif page == "📈 Prediksi Penjualan":
 
 # Footer
 st.markdown("---")
-st.markdown("📦 Dibuat oleh [Tim Anda] • 🚀 Dibimbing.id • `Streamlit + Scikit-learn + EDA`")
+st.markdown("📦 Dibuat oleh Alya Siti Fathimah • 🚀 Dibimbing.id • `Streamlit + Scikit-learn + EDA`")
