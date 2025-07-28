@@ -78,12 +78,14 @@ if page == "📊 EDA":
     st.pyplot(fig4)
 
     # ============================
-    # 🔍 Evaluasi Model Random Forest
+    # 📈 Evaluasi Model Random Forest
     # ============================
     st.subheader("📈 Evaluasi Model Random Forest")
-
-    # Feature engineering untuk model
+    
+    # Mapping ukuran pizza ke angka
     df['pizza_size_num'] = df['pizza_size'].map({'S':1,'M':2,'L':3,'XL':4,'XXL':5})
+    
+    # Agregasi harian
     daily = df.groupby('order_date').agg({
         'quantity': 'sum',
         'unit_price': 'mean',
@@ -91,50 +93,53 @@ if page == "📊 EDA":
         'pizza_size_num': 'mean',
         'total_price': 'sum'
     }).reset_index()
-
+    
+    # Tambahkan fitur waktu
     daily['day_of_week'] = daily['order_date'].dt.dayofweek
     daily['month'] = daily['order_date'].dt.month
     daily['day'] = daily['order_date'].dt.day
-
-    # Fitur dan target
-    X_model = daily[['day_of_week', 'month', 'day', 'quantity', 'unit_price', 'pizza_name', 'pizza_size_num']]
-    y_model = daily['total_price']
-
-    # Split data
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import mean_squared_error, r2_score
-
-    X_train, X_test, y_train, y_test = train_test_split(X_model, y_model, test_size=0.2, random_state=42)
-
-    # Load model
-    model = load_model()
-    # Pastikan kolom yang dibutuhkan tersedia dan cocok
+    
+    # Buat kolom dengan nama yang cocok dengan saat training
     daily['total_quantity'] = daily['quantity']
     daily['avg_unit_price'] = daily['unit_price']
     daily['unique_pizzas'] = daily['pizza_name']
     daily['avg_size'] = daily['pizza_size_num']
     
+    # Ambil hanya fitur yang sesuai training
     X_model = daily[['day_of_week', 'month', 'day', 'total_quantity', 'avg_unit_price', 'unique_pizzas', 'avg_size']]
-
-
+    y_model = daily['total_price']
+    
+    # Split data
+    from sklearn.model_selection import train_test_split
+    from sklearn.metrics import mean_squared_error, r2_score
+    
+    X_train, X_test, y_train, y_test = train_test_split(X_model, y_model, test_size=0.2, random_state=42)
+    
+    # Load model
+    model = load_model()
+    X_test = X_test[model.feature_names_in_]
+    
+    # Prediksi
+    y_pred = model.predict(X_test)
+    
     # Evaluasi
     r2 = r2_score(y_test, y_pred)
     mse = mean_squared_error(y_test, y_pred)
-
+    
     # Tampilkan metrik
     st.markdown(f"**R² Score:** `{r2:.4f}`")
     st.markdown(f"**Mean Squared Error:** `{mse:,.2f}`")
-
+    
     # Visualisasi Prediksi vs Aktual
     st.subheader("📊 Grafik Prediksi vs Aktual")
-    fig5, ax5 = plt.subplots(figsize=(10, 4))
-    ax5.plot(y_test.values, label='Actual', marker='o')
-    ax5.plot(y_pred, label='Predicted', marker='x')
-    ax5.set_xlabel("Sample Index")
-    ax5.set_ylabel("Total Penjualan ($)")
-    ax5.set_title("Prediksi vs Aktual - Random Forest")
-    ax5.legend()
-    st.pyplot(fig5)
+    fig, ax = plt.subplots(figsize=(10, 4))
+    ax.plot(y_test.values, label='Actual', marker='o')
+    ax.plot(y_pred, label='Predicted', marker='x')
+    ax.set_xlabel("Sample Index")
+    ax.set_ylabel("Total Penjualan ($)")
+    ax.set_title("Prediksi vs Aktual - Random Forest")
+    ax.legend()
+    st.pyplot(fig)
 
 # ==========================
 # Halaman Prediksi
