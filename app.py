@@ -30,14 +30,13 @@ page = st.sidebar.radio("Pilih Halaman", ["📊 EDA", "📈 Prediksi Penjualan"]
 if page == "📊 EDA":
     st.title("📊 Exploratory Data Analysis - Pizza Sales")
 
-    # ⏬ Sidebar: Tampilkan data mentah
-    with st.sidebar.expander("📄 Lihat Data Mentah"):
-        st.write("Dataframe Pizza Sales:")
-        st.dataframe(df, use_container_width=True)
-
     # Konversi order_date agar bisa digunakan
     df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce', dayfirst=True)
     df = df.dropna(subset=['order_date'])  # Drop jika parsing gagal
+
+    # 🗂️ Tampilkan data mentah dalam expander di halaman utama
+    with st.expander("📄 Lihat Data Mentah (Raw Data)"):
+        st.dataframe(df, use_container_width=True)
 
     # Visualisasi 1: 10 Pizza Terlaris
     col1, col2 = st.columns(2)
@@ -49,7 +48,6 @@ if page == "📊 EDA":
         ax1.axis('equal')
         st.pyplot(fig1)
 
-    # Visualisasi 2: Kategori Pizza
     with col2:
         st.subheader("🍕 Kategori Pizza Terpopuler")
         pizza_category_counts = df['pizza_category'].value_counts()
@@ -58,7 +56,7 @@ if page == "📊 EDA":
         ax2.axis('equal')
         st.pyplot(fig2)
 
-    # Visualisasi 3: Revenue per Pizza
+    # Visualisasi 2: Revenue per Pizza
     st.subheader("💰 Total Revenue per Pizza")
     revenue_per_pizza = df.groupby('pizza_name')['total_price'].sum().sort_values(ascending=False)
     fig3, ax3 = plt.subplots(figsize=(10, 8))
@@ -68,7 +66,7 @@ if page == "📊 EDA":
     ax3.set_title("Total Revenue per Pizza")
     st.pyplot(fig3)
 
-    # Visualisasi 4: Pendapatan Harian
+    # Visualisasi 3: Pendapatan Harian
     st.subheader("📅 Pendapatan Harian")
     daily_revenue = df.groupby('order_date')['total_price'].sum()
     fig4, ax4 = plt.subplots(figsize=(12, 4))
