@@ -108,7 +108,14 @@ if page == "📊 EDA":
 
     # Load model
     model = load_model()
-    y_pred = model.predict(X_test)
+    # Pastikan kolom yang dibutuhkan tersedia dan cocok
+    daily['total_quantity'] = daily['quantity']
+    daily['avg_unit_price'] = daily['unit_price']
+    daily['unique_pizzas'] = daily['pizza_name']
+    daily['avg_size'] = daily['pizza_size_num']
+    
+    X_model = daily[['day_of_week', 'month', 'day', 'total_quantity', 'avg_unit_price', 'unique_pizzas', 'avg_size']]
+
 
     # Evaluasi
     r2 = r2_score(y_test, y_pred)
