@@ -152,14 +152,20 @@ elif tab == "🗕 EDA Bulanan":
     
     # === Pendapatan Harian + Kategori (Col 2) ===
     with col2:
+        # Grafik harian
         st.markdown("### 📈 Pendapatan Harian")
-        fig1, ax1 = plt.subplots()
-        daily_rev.plot(kind='line', marker='o', ax=ax1)
-        ax1.set_title(f"Total Revenue per Hari - {bulan_nama[selected_month]}")
-        ax1.set_ylabel("Total Revenue ($)")
-        ax1.grid(True)
-        st.pyplot(fig1)
-    
+        daily_rev = monthly_df.groupby('order_date')['total_price'].sum()
+        
+        if not daily_rev.empty:
+            fig1, ax1 = plt.subplots()
+            daily_rev.plot(kind='line', marker='o', ax=ax1)
+            ax1.set_title(f"Total Revenue per Hari - {bulan_nama[selected_month]}")
+            ax1.set_ylabel("Total Revenue ($)")
+            ax1.grid(True)
+            st.pyplot(fig1)
+        else:
+            st.warning("Tidak ada data pendapatan harian untuk bulan ini.")
+
         st.markdown("### 🥗 Distribusi Kategori Pizza")
         category_dist = monthly_df['pizza_category'].value_counts()
         fig3, ax3 = plt.subplots()
