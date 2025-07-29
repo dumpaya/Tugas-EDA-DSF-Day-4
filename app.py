@@ -139,102 +139,101 @@ elif tab == "🗕 EDA Bulanan":
     avg_order_value = total_income / total_orders if total_orders != 0 else 0
 
     st.markdown("### 🔢 Ringkasan Bulan: " + bulan_nama[selected_month])
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("💰 Revenue", f"${total_income:,.0f}")
-    col2.metric("📦 Total Orders", total_orders)
-    col3.metric("🍕 Total Qty", total_qty)
-    col4.metric("📊 Avg Order Value", f"${avg_order_value:,.2f}")
-
-    # Grafik harian
-    st.markdown("### 📈 Pendapatan Harian")
-    daily_rev = monthly_df.groupby('order_date')['total_price'].sum()
-    fig1, ax1 = plt.subplots()
-    daily_rev.plot(kind='line', marker='o', ax=ax1)
-    ax1.set_title(f"Total Revenue per Hari - {bulan_nama[selected_month]}")
-    ax1.set_ylabel("Total Revenue ($)")
-    ax1.grid(True)
-    st.pyplot(fig1)
-
-    # Top pizza
-    st.markdown("### 🍕 Top 5 Pizza Terlaris")
-    top_pizza = monthly_df['pizza_name'].value_counts().head(5)
-    fig2, ax2 = plt.subplots()
-    sns.barplot(x=top_pizza.values, y=top_pizza.index, palette="autumn", ax=ax2)
-    ax2.set_xlabel("Jumlah Terjual")
-    ax2.set_title("Top 5 Pizza")
-    st.pyplot(fig2)
-
-    # Pizza Category Distribution
-    st.markdown("### 🥗 Distribusi Kategori Pizza")
-    category_dist = monthly_df['pizza_category'].value_counts()
-    fig3, ax3 = plt.subplots()
-    ax3.pie(category_dist, labels=category_dist.index, autopct='%1.1f%%', startangle=90)
-    ax3.axis('equal')
-    st.pyplot(fig3)
-
-    # Penjualan berdasarkan ukuran
-    st.markdown("### 📏 Distribusi Ukuran Pizza")
-    size_dist = monthly_df['pizza_size'].value_counts().sort_index()
-    fig4, ax4 = plt.subplots()
-    sns.barplot(x=size_dist.index, y=size_dist.values, palette="Blues", ax=ax4)
-    ax4.set_ylabel("Jumlah Terjual")
-    ax4.set_xlabel("Ukuran Pizza")
-    ax4.set_title("Penjualan per Ukuran")
-    st.pyplot(fig4)
+    # ======= Layout: 3 Kolom Utama =======
+    col1, col2, col3 = st.columns([1, 1, 1])
+    
+    # === Ringkasan Bulanan (Col 1) ===
+    with col1:
+        st.markdown("### 🔢 Ringkasan Bulan")
+        st.metric("💰 Revenue", f"${total_income:,.0f}")
+        st.metric("📦 Total Orders", total_orders)
+        st.metric("🍕 Total Qty", total_qty)
+        st.metric("📊 Avg Order Value", f"${avg_order_value:,.2f}")
+    
+    # === Pendapatan Harian + Kategori (Col 2) ===
+    with col2:
+        st.markdown("### 📈 Pendapatan Harian")
+        fig1, ax1 = plt.subplots()
+        daily_rev.plot(kind='line', marker='o', ax=ax1)
+        ax1.set_title(f"Total Revenue per Hari - {bulan_nama[selected_month]}")
+        ax1.set_ylabel("Total Revenue ($)")
+        ax1.grid(True)
+        st.pyplot(fig1)
+    
+        st.markdown("### 🥗 Distribusi Kategori Pizza")
+        category_dist = monthly_df['pizza_category'].value_counts()
+        fig3, ax3 = plt.subplots()
+        ax3.pie(category_dist, labels=category_dist.index, autopct='%1.1f%%', startangle=90)
+        ax3.axis('equal')
+        st.pyplot(fig3)
+    
+    # === Top Pizza + Ukuran (Col 3) ===
+    with col3:
+        st.markdown("### 🍕 Top 5 Pizza Terlaris")
+        top_pizza = monthly_df['pizza_name'].value_counts().head(5)
+        fig2, ax2 = plt.subplots()
+        sns.barplot(x=top_pizza.values, y=top_pizza.index, palette="autumn", ax=ax2)
+        ax2.set_xlabel("Jumlah Terjual")
+        ax2.set_title("Top 5 Pizza")
+        st.pyplot(fig2)
+    
+        st.markdown("### 📏 Distribusi Ukuran Pizza")
+        size_dist = monthly_df['pizza_size'].value_counts().sort_index()
+        fig4, ax4 = plt.subplots()
+        sns.barplot(x=size_dist.index, y=size_dist.values, palette="Blues", ax=ax4)
+        ax4.set_ylabel("Jumlah Terjual")
+        ax4.set_xlabel("Ukuran Pizza")
+        ax4.set_title("Penjualan per Ukuran")
+        st.pyplot(fig4)
 
     # ==========================
     # 🔥 Peak Hours Bulanan (10:00 AM – 9:00 PM)
     # ==========================
-    st.markdown("### 🔥 Peak Hours Bulanan (11:00 AM – 10:00 PM)")
-
-    # Pastikan order_date tipe datetime
-    df['order_date'] = pd.to_datetime(df['order_date'])
-
-    # Ambil data bulan terpilih
-    monthly_df = df[df['order_date'].dt.month == selected_month].copy()
-
-    # Gabungkan tanggal dan jam → datetime penuh
-    monthly_df['order_datetime'] = pd.to_datetime(
-        monthly_df['order_date'].dt.date.astype(str) + ' ' + monthly_df['order_time'].astype(str)
-    )
-
-    # Ekstrak jam dan hari
-    monthly_df['hour'] = monthly_df['order_datetime'].dt.hour
-    monthly_df['day_name'] = monthly_df['order_datetime'].dt.day_name()
-
-    # Filter hanya jam 10 - 21
-    jam_filter = monthly_df[(monthly_df['hour'] >= 10) & (monthly_df['hour'] <= 22)]
-
-    # Pivot table: Hari vs Jam
-    pivot_table = jam_filter.pivot_table(
-        index='day_name',
-        columns='hour',
-        values='quantity',
-        aggfunc='sum',
-        fill_value=0
-    )
-
-    # Urutkan hari & jam
-    ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-    pivot_table = pivot_table.reindex(ordered_days)
-    pivot_table = pivot_table.reindex(columns=range(11, 23), fill_value=0)
-
-    # Tambahkan total per baris (hari)
-    pivot_table['Total'] = pivot_table.sum(axis=1)
-
-    # Tambahkan total per kolom (jam)
-    total_row = pivot_table.sum(numeric_only=True).to_frame().T
-    total_row.index = ['Total']
-    pivot_table = pd.concat([pivot_table, total_row])
-
-    # Format dan tampilkan
-    st.dataframe(
-        pivot_table.style
-        .background_gradient(cmap='YlOrRd', axis=None)
-        .format(precision=0),
-        use_container_width=True
-    )
-
+    # === Peak Hours (Gabung Col2 + Col3 Seperti Merge & Center) ===
+    with st.container():
+        col_spacer1, col_merge, col_spacer2 = st.columns([1, 4, 1])
+        with col_merge:
+            st.markdown("### 🔥 Peak Hours Bulanan (11:00 AM – 10:00 PM)")
+    
+            # --- Gunakan kode peak hour yang sudah benar ---
+            df['order_date'] = pd.to_datetime(df['order_date'])
+    
+            monthly_df = df[df['order_date'].dt.month == selected_month].copy()
+    
+            monthly_df['order_datetime'] = pd.to_datetime(
+                monthly_df['order_date'].dt.date.astype(str) + ' ' + monthly_df['order_time'].astype(str)
+            )
+    
+            monthly_df['hour'] = monthly_df['order_datetime'].dt.hour
+            monthly_df['day_name'] = monthly_df['order_datetime'].dt.day_name()
+    
+            jam_filter = monthly_df[(monthly_df['hour'] >= 10) & (monthly_df['hour'] <= 22)]
+    
+            pivot_table = jam_filter.pivot_table(
+                index='day_name',
+                columns='hour',
+                values='quantity',
+                aggfunc='sum',
+                fill_value=0
+            )
+    
+            ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+            pivot_table = pivot_table.reindex(ordered_days)
+            pivot_table = pivot_table.reindex(columns=range(11, 23), fill_value=0)
+    
+            pivot_table['Total'] = pivot_table.sum(axis=1)
+    
+            total_row = pivot_table.sum(numeric_only=True).to_frame().T
+            total_row.index = ['Total']
+            pivot_table = pd.concat([pivot_table, total_row])
+    
+            st.dataframe(
+                pivot_table.style
+                .background_gradient(cmap='YlOrRd', axis=None)
+                .format(precision=0),
+                use_container_width=True
+            )
+    
 # ==========================
 # PREDIKSI PENJUALAN
 # ==========================
