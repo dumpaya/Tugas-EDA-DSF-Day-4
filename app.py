@@ -243,36 +243,48 @@ elif tab == "🗕 EDA Bulanan":
 # PREDIKSI PENJUALAN
 # ==========================
 elif tab == "📈 Prediksi":
-    st.title("📈 Prediksi Total Penjualan Harian")
+    st.title("📈 Prediksi Total Penjualan")
+
+    mode = st.radio("Pilih Mode Prediksi", ["Harian", "Bulanan"], horizontal=True)
 
     with st.form(key="form_prediksi"):
         col1, col2, col3 = st.columns(3)
         with col1:
-            day_of_week = st.slider("Hari (0=Senin, ..., 6=Minggu)", 0, 6, 2)
+            if mode == "Harian":
+                day_of_week = st.slider("Hari (0=Senin, ..., 6=Minggu)", 0, 6, 2)
+                day = st.slider("Tanggal", 1, 31, 15)
             month = st.selectbox("Bulan", list(range(1, 13)), index=6)
         with col2:
-            day = st.slider("Tanggal", 1, 31, 15)
-            total_quantity = st.number_input("Total Jumlah Pizza", min_value=1, value=100)
+            total_quantity = st.number_input("Total Jumlah Pizza / Hari", min_value=1, value=100)
+            unique_pizzas = st.slider("Jumlah Pizza Unik", 1, 32, 5)
         with col3:
             avg_unit_price = st.number_input("Rata-rata Harga per Unit", min_value=0.0, value=20.0)
-            unique_pizzas = st.slider("Jumlah Pizza Unik", 1, 32, 5)
             avg_size = st.slider("Ukuran Rata-Rata Pizza (1=S, ..., 5=XXL)", 1.0, 5.0, 3.0)
 
         submit = st.form_submit_button("Prediksi Sekarang")
 
     if submit:
-        input_df = pd.DataFrame({
-            'day_of_week': [day_of_week],
-            'month': [month],
-            'day': [day],
-            'total_quantity': [total_quantity],
-            'avg_unit_price': [avg_unit_price],
-            'unique_pizzas': [unique_pizzas],
-            'avg_size': [avg_size]
-        })
+        if mode == "Harian":
+            # Prediksi harian → pakai model
+            input_df = pd.DataFrame({
+                'day_of_week': [day_of_week],
+                'month': [month],
+                'day': [day],
+                'total_quantity': [total_quantity],
+                'avg_unit_price': [avg_unit_price],
+                'unique_pizzas': [unique_pizzas],
+                'avg_size': [avg_size]
+            })
 
-        prediction = model.predict(input_df)[0]
-        st.success(f"✅ Total Penjualan yang Diprediksi: **${prediction:,.2f}**")
+            prediction = model.predict(input_df)[0]
+            st.success(f"✅ Total Penjualan yang Diprediksi (Harian): **${prediction:,.2f}**")
+
+        elif mode == "Bulanan":
+            # Prediksi bulanan → manual kalkulasi
+            # Estimasi: 26 hari aktif kerja per bulan
+            hari_aktif = 26
+            revenue_bulanan = total_quantity * avg_unit_price * hari_aktif
+            st.success(f"📅 Total Penjualan yang Diprediksi (Bulanan): **${revenue_bulanan:,.2f}**")
 
 # Footer
 st.markdown("---")
