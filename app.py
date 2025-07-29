@@ -185,7 +185,7 @@ elif tab == "🗕 EDA Bulanan":
     # ==========================
     # 🔥 Peak Hours Bulanan (10:00 AM – 9:00 PM)
     # ==========================
-    st.markdown("### 🔥 Peak Hours Bulanan (10:00 AM – 9:00 PM)")
+    st.markdown("### 🔥 Peak Hours Bulanan (11:00 AM – 10:00 PM)")
 
     # Pastikan order_date tipe datetime
     df['order_date'] = pd.to_datetime(df['order_date'])
@@ -217,7 +217,7 @@ elif tab == "🗕 EDA Bulanan":
     # Urutkan hari & jam
     ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     pivot_table = pivot_table.reindex(ordered_days)
-    pivot_table = pivot_table.reindex(columns=range(10, 24), fill_value=0)
+    pivot_table = pivot_table.reindex(columns=range(11, 23), fill_value=0)
 
     # Tambahkan total per baris (hari)
     pivot_table['Total'] = pivot_table.sum(axis=1)
