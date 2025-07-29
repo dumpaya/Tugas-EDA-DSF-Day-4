@@ -203,7 +203,7 @@ elif tab == "🗕 EDA Bulanan":
     monthly_df['day_name'] = monthly_df['order_datetime'].dt.day_name()
 
     # Filter hanya jam 10 - 21
-    jam_filter = monthly_df[(monthly_df['hour'] >= 10) & (monthly_df['hour'] <= 21)]
+    jam_filter = monthly_df[(monthly_df['hour'] >= 10) & (monthly_df['hour'] <= 22)]
 
     # Pivot table: Hari vs Jam
     pivot_table = jam_filter.pivot_table(
@@ -217,7 +217,7 @@ elif tab == "🗕 EDA Bulanan":
     # Urutkan hari & jam
     ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     pivot_table = pivot_table.reindex(ordered_days)
-    pivot_table = pivot_table.reindex(columns=range(11, 23), fill_value=0)
+    pivot_table = pivot_table.reindex(columns=range(10, 24), fill_value=0)
 
     # Tambahkan total per baris (hari)
     pivot_table['Total'] = pivot_table.sum(axis=1)
