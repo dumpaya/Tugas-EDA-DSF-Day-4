@@ -183,14 +183,14 @@ elif tab == "🗕 EDA Bulanan":
     st.pyplot(fig4)
 
     # ==========================
-    # 🔥 Peak Hours Bulanan
+    # 🔥 Peak Hours Bulanan - Tabel Heatmap
     # ==========================
-    st.markdown("### 🔥 Peak Hours Bulanan (Jumlah Order per Jam)")
+    st.markdown("### 🔥 Peak Hours Bulanan (Tabel Jam Sibuk)")
 
     monthly_df['hour'] = monthly_df['order_date'].dt.hour
     monthly_df['day_name'] = monthly_df['order_date'].dt.day_name()
 
-    # Heatmap table: Hari vs Jam
+    # Buat pivot table: Hari (rows) vs Jam (columns)
     pivot_table = monthly_df.pivot_table(
         index='day_name',
         columns='hour',
@@ -203,19 +203,19 @@ elif tab == "🗕 EDA Bulanan":
     ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     pivot_table = pivot_table.reindex(ordered_days)
 
-    st.dataframe(pivot_table, use_container_width=True)
+    # Tambahkan total di kanan dan bawah
+    pivot_table['Total'] = pivot_table.sum(axis=1)
+    total_row = pivot_table.sum(numeric_only=True).to_frame().T
+    total_row.index = ['Total']
+    pivot_table = pd.concat([pivot_table, total_row])
 
-    # Line chart: jumlah order per jam (total)
-    hourly_orders = monthly_df.groupby('hour')['order_id'].count().reset_index()
-
-    fig5, ax5 = plt.subplots()
-    sns.lineplot(data=hourly_orders, x='hour', y='order_id', marker='o', color='orange', ax=ax5)
-    ax5.set_title(f"Jumlah Order per Jam - {bulan_nama[selected_month]}")
-    ax5.set_xlabel("Jam")
-    ax5.set_ylabel("Jumlah Order")
-    ax5.grid(True)
-    st.pyplot(fig5)
-
+    # Tampilkan dengan warna gradasi seperti gambar (oranye ke merah)
+    st.dataframe(
+        pivot_table.style
+        .background_gradient(cmap='YlOrRd', axis=None)
+        .format(precision=0),
+        use_container_width=True
+    )
 
 # ==========================
 # PREDIKSI PENJUALAN
