@@ -118,34 +118,104 @@ if tab == "📈 EDA Global":
     st.pyplot(fig5)
 
 # ==========================
-# EDA BULANAN
+# EDA BULANAN (Tampilan Visual Seperti Dashboard)
 # ==========================
 elif tab == "🗕 EDA Bulanan":
-    st.title("🗕 Laporan Bulanan Penjualan Pizza")
+    st.title("🗕 EDA Bulanan: Analisis Penjualan Pizza")
+
     bulan_nama = {
         1: "Januari", 2: "Februari", 3: "Maret", 4: "April",
         5: "Mei", 6: "Juni", 7: "Juli", 8: "Agustus",
         9: "September", 10: "Oktober", 11: "November", 12: "Desember"
     }
-    selected_month = st.selectbox("Pilih Bulan", list(bulan_nama.keys()), format_func=lambda x: bulan_nama[x])
 
+    selected_month = st.selectbox("📅 Pilih Bulan", list(bulan_nama.keys()), format_func=lambda x: bulan_nama[x])
     monthly_df = df[df['order_date'].dt.month == selected_month]
 
+    # Data ringkasan
     total_income = monthly_df['total_price'].sum()
-    total_customers = monthly_df['order_id'].nunique()
-    top_5_pizza = monthly_df['pizza_name'].value_counts().head(5)
-    daily = monthly_df.groupby('order_date')['total_price'].sum()
+    total_orders = monthly_df['order_id'].nunique()
+    total_qty = monthly_df['quantity'].sum()
+    avg_order_value = total_income / total_orders if total_orders != 0 else 0
 
-    col1, col2 = st.columns(2)
-    with col1:
-        st.metric("📈 Total Pendapatan", f"${total_income:,.2f}")
-        st.metric("👥 Total Customer Unik", f"{total_customers}")
-    with col2:
-        st.subheader("🍕 Top 5 Pizza")
-        st.bar_chart(top_5_pizza)
+    st.markdown("### 🔢 Ringkasan Bulan: " + bulan_nama[selected_month])
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("💰 Revenue", f"${total_income:,.0f}")
+    col2.metric("📦 Total Orders", total_orders)
+    col3.metric("🍕 Total Qty", total_qty)
+    col4.metric("📊 Avg Order Value", f"${avg_order_value:,.2f}")
 
-    st.subheader("📈 Grafik Pendapatan Harian")
-    st.line_chart(daily)
+    # Grafik harian
+    st.markdown("### 📈 Pendapatan Harian")
+    daily_rev = monthly_df.groupby('order_date')['total_price'].sum()
+    fig1, ax1 = plt.subplots()
+    daily_rev.plot(kind='line', marker='o', ax=ax1)
+    ax1.set_title(f"Total Revenue per Hari - {bulan_nama[selected_month]}")
+    ax1.set_ylabel("Total Revenue ($)")
+    ax1.grid(True)
+    st.pyplot(fig1)
+
+    # Top pizza
+    st.markdown("### 🍕 Top 5 Pizza Terlaris")
+    top_pizza = monthly_df['pizza_name'].value_counts().head(5)
+    fig2, ax2 = plt.subplots()
+    sns.barplot(x=top_pizza.values, y=top_pizza.index, palette="autumn", ax=ax2)
+    ax2.set_xlabel("Jumlah Terjual")
+    ax2.set_title("Top 5 Pizza")
+    st.pyplot(fig2)
+
+    # Pizza Category Distribution
+    st.markdown("### 🥗 Distribusi Kategori Pizza")
+    category_dist = monthly_df['pizza_category'].value_counts()
+    fig3, ax3 = plt.subplots()
+    ax3.pie(category_dist, labels=category_dist.index, autopct='%1.1f%%', startangle=90)
+    ax3.axis('equal')
+    st.pyplot(fig3)
+
+    # Penjualan berdasarkan ukuran
+    st.markdown("### 📏 Distribusi Ukuran Pizza")
+    size_dist = monthly_df['pizza_size'].value_counts().sort_index()
+    fig4, ax4 = plt.subplots()
+    sns.barplot(x=size_dist.index, y=size_dist.values, palette="Blues", ax=ax4)
+    ax4.set_ylabel("Jumlah Terjual")
+    ax4.set_xlabel("Ukuran Pizza")
+    ax4.set_title("Penjualan per Ukuran")
+    st.pyplot(fig4)
+
+    # ==========================
+    # 🔥 Peak Hours Bulanan
+    # ==========================
+    st.markdown("### 🔥 Peak Hours Bulanan (Jumlah Order per Jam)")
+
+    monthly_df['hour'] = monthly_df['order_date'].dt.hour
+    monthly_df['day_name'] = monthly_df['order_date'].dt.day_name()
+
+    # Heatmap table: Hari vs Jam
+    pivot_table = monthly_df.pivot_table(
+        index='day_name',
+        columns='hour',
+        values='order_id',
+        aggfunc='count',
+        fill_value=0
+    )
+
+    # Urutkan hari agar sesuai minggu
+    ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+    pivot_table = pivot_table.reindex(ordered_days)
+
+    st.dataframe(pivot_table, use_container_width=True)
+
+    # Line chart: jumlah order per jam (total)
+    hourly_orders = monthly_df.groupby('hour')['order_id'].count().reset_index()
+
+    fig5, ax5 = plt.subplots()
+    sns.lineplot(data=hourly_orders, x='hour', y='order_id', marker='o', color='orange', ax=ax5)
+    ax5.set_title(f"Jumlah Order per Jam - {bulan_nama[selected_month]}")
+    ax5.set_xlabel("Jam")
+    ax5.set_ylabel("Jumlah Order")
+    ax5.grid(True)
+    st.pyplot(fig5)
+
 
 # ==========================
 # PREDIKSI PENJUALAN
