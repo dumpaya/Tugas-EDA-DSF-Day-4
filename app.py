@@ -4,14 +4,17 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from joblib import load
 from datetime import datetime
+from sklearn.metrics import mean_squared_error, r2_score
+from sklearn.model_selection import train_test_split
 
-# Atur tampilan
 st.set_page_config(page_title="Pizza Sales Dashboard", layout="wide")
 
-# Load dataset dan model
 @st.cache_data
 def load_data():
-    return pd.read_csv("pizza_sales.csv")
+    df = pd.read_csv("pizza_sales.csv")
+    df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce', dayfirst=True)
+    df = df.dropna(subset=['order_date'])
+    return df
 
 @st.cache_resource
 def load_model():
@@ -20,28 +23,22 @@ def load_model():
 df = load_data()
 model = load_model()
 
-# Sidebar
+# Sidebar menu
 st.sidebar.title("Navigasi")
-page = st.sidebar.radio("Pilih Halaman", ["📊 EDA", "📈 Prediksi Penjualan"])
+tab = st.sidebar.radio("Pilih Halaman", ["📈 EDA Global", "🗕 EDA Bulanan", "📈 Prediksi"])
 
 # ==========================
-# Halaman EDA
+# EDA GLOBAL
 # ==========================
-if page == "📊 EDA":
-    st.title("📊 Exploratory Data Analysis - Pizza Sales")
+if tab == "📈 EDA Global":
+    st.title("📈 Exploratory Data Analysis - Global")
 
-    # Konversi order_date agar bisa digunakan
-    df['order_date'] = pd.to_datetime(df['order_date'], errors='coerce', dayfirst=True)
-    df = df.dropna(subset=['order_date'])  # Drop jika parsing gagal
-
-    # 🗂️ Tampilkan data mentah dalam expander di halaman utama
-    with st.expander("📄 Lihat Data Mentah (Raw Data)"):
+    with st.expander("📄 Lihat Data Mentah"):
         st.dataframe(df, use_container_width=True)
 
-    # Visualisasi 1: 10 Pizza Terlaris
     col1, col2 = st.columns(2)
     with col1:
-        st.subheader("🥇 10 Pizza Terlaris")
+        st.subheader("🎖️ 10 Pizza Terlaris")
         pizza_counts = df['pizza_name'].value_counts().head(10)
         fig1, ax1 = plt.subplots()
         ax1.pie(pizza_counts, labels=pizza_counts.index, autopct='%1.1f%%', startangle=140)
@@ -56,18 +53,15 @@ if page == "📊 EDA":
         ax2.axis('equal')
         st.pyplot(fig2)
 
-    # Visualisasi 2: Revenue per Pizza
     st.subheader("💰 Total Revenue per Pizza")
     revenue_per_pizza = df.groupby('pizza_name')['total_price'].sum().sort_values(ascending=False)
     fig3, ax3 = plt.subplots(figsize=(10, 8))
     sns.barplot(x=revenue_per_pizza.values, y=revenue_per_pizza.index, ax=ax3, palette='viridis')
     ax3.set_xlabel("Total Revenue ($)")
     ax3.set_ylabel("Pizza Name")
-    ax3.set_title("Total Revenue per Pizza")
     st.pyplot(fig3)
 
-    # Visualisasi 3: Pendapatan Harian
-    st.subheader("📅 Pendapatan Harian")
+    st.subheader("🗓️ Pendapatan Harian")
     daily_revenue = df.groupby('order_date')['total_price'].sum()
     fig4, ax4 = plt.subplots(figsize=(12, 4))
     daily_revenue.plot(ax=ax4)
@@ -78,14 +72,11 @@ if page == "📊 EDA":
     st.pyplot(fig4)
 
     # ============================
-    # 📈 Evaluasi Model Random Forest
+    # \ud83d\udcc8 Evaluasi Model Random Forest
     # ============================
     st.subheader("📈 Evaluasi Model Random Forest")
-    
-    # Mapping ukuran pizza ke angka
+
     df['pizza_size_num'] = df['pizza_size'].map({'S':1,'M':2,'L':3,'XL':4,'XXL':5})
-    
-    # Agregasi harian
     daily = df.groupby('order_date').agg({
         'quantity': 'sum',
         'unit_price': 'mean',
@@ -93,61 +84,74 @@ if page == "📊 EDA":
         'pizza_size_num': 'mean',
         'total_price': 'sum'
     }).reset_index()
-    
-    # Tambahkan fitur waktu
+
     daily['day_of_week'] = daily['order_date'].dt.dayofweek
     daily['month'] = daily['order_date'].dt.month
     daily['day'] = daily['order_date'].dt.day
-    
-    # Buat kolom dengan nama yang cocok dengan saat training
+
     daily['total_quantity'] = daily['quantity']
     daily['avg_unit_price'] = daily['unit_price']
     daily['unique_pizzas'] = daily['pizza_name']
     daily['avg_size'] = daily['pizza_size_num']
-    
-    # Ambil hanya fitur yang sesuai training
+
     X_model = daily[['day_of_week', 'month', 'day', 'total_quantity', 'avg_unit_price', 'unique_pizzas', 'avg_size']]
     y_model = daily['total_price']
-    
-    # Split data
-    from sklearn.model_selection import train_test_split
-    from sklearn.metrics import mean_squared_error, r2_score
-    
+
     X_train, X_test, y_train, y_test = train_test_split(X_model, y_model, test_size=0.2, random_state=42)
-    
-    # Load model
-    model = load_model()
     X_test = X_test[model.feature_names_in_]
-    
-    # Prediksi
     y_pred = model.predict(X_test)
-    
-    # Evaluasi
+
     r2 = r2_score(y_test, y_pred)
     mse = mean_squared_error(y_test, y_pred)
-    
-    # Tampilkan metrik
+
     st.markdown(f"**R² Score:** `{r2:.4f}`")
     st.markdown(f"**Mean Squared Error:** `{mse:,.2f}`")
-    
-    # Visualisasi Prediksi vs Aktual
+
     st.subheader("📊 Grafik Prediksi vs Aktual")
-    fig, ax = plt.subplots(figsize=(10, 4))
-    ax.plot(y_test.values, label='Actual', marker='o')
-    ax.plot(y_pred, label='Predicted', marker='x')
-    ax.set_xlabel("Sample Index")
-    ax.set_ylabel("Total Penjualan ($)")
-    ax.set_title("Prediksi vs Aktual - Random Forest")
-    ax.legend()
-    st.pyplot(fig)
+    fig5, ax5 = plt.subplots(figsize=(10, 4))
+    ax5.plot(y_test.values, label='Actual', marker='o')
+    ax5.plot(y_pred, label='Predicted', marker='x')
+    ax5.set_xlabel("Sample Index")
+    ax5.set_ylabel("Total Penjualan ($)")
+    ax5.set_title("Prediksi vs Aktual - Random Forest")
+    ax5.legend()
+    st.pyplot(fig5)
 
 # ==========================
-# Halaman Prediksi
+# EDA BULANAN
 # ==========================
-elif page == "📈 Prediksi Penjualan":
+elif tab == "🗕 EDA Bulanan":
+    st.title("🗕 Laporan Bulanan Penjualan Pizza")
+    bulan_nama = {
+        1: "Januari", 2: "Februari", 3: "Maret", 4: "April",
+        5: "Mei", 6: "Juni", 7: "Juli", 8: "Agustus",
+        9: "September", 10: "Oktober", 11: "November", 12: "Desember"
+    }
+    selected_month = st.selectbox("Pilih Bulan", list(bulan_nama.keys()), format_func=lambda x: bulan_nama[x])
+
+    monthly_df = df[df['order_date'].dt.month == selected_month]
+
+    total_income = monthly_df['total_price'].sum()
+    total_customers = monthly_df['order_id'].nunique()
+    top_5_pizza = monthly_df['pizza_name'].value_counts().head(5)
+    daily = monthly_df.groupby('order_date')['total_price'].sum()
+
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("📈 Total Pendapatan", f"${total_income:,.2f}")
+        st.metric("👥 Total Customer Unik", f"{total_customers}")
+    with col2:
+        st.subheader("🍕 Top 5 Pizza")
+        st.bar_chart(top_5_pizza)
+
+    st.subheader("📈 Grafik Pendapatan Harian")
+    st.line_chart(daily)
+
+# ==========================
+# PREDIKSI PENJUALAN
+# ==========================
+elif tab == "📈 Prediksi":
     st.title("📈 Prediksi Total Penjualan Harian")
-
-    st.markdown("Masukkan data harian untuk memprediksi **total harga penjualan pizza**.")
 
     with st.form(key="form_prediksi"):
         col1, col2, col3 = st.columns(3)
@@ -177,8 +181,6 @@ elif page == "📈 Prediksi Penjualan":
 
         prediction = model.predict(input_df)[0]
         st.success(f"✅ Total Penjualan yang Diprediksi: **${prediction:,.2f}**")
-
-        st.caption("Model: Random Forest Regressor (tuned)")
 
 # Footer
 st.markdown("---")
