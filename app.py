@@ -144,7 +144,6 @@ elif tab == "🗕 EDA Bulanan":
     
     # === Ringkasan Bulanan (Col 1) ===
     with col1:
-        st.markdown("### 🔢 Ringkasan Bulan")
         st.metric("💰 Revenue", f"${total_income:,.0f}")
         st.metric("📦 Total Orders", total_orders)
         st.metric("🍕 Total Qty", total_qty)
