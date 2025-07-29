@@ -217,7 +217,7 @@ elif tab == "🗕 EDA Bulanan":
     # Urutkan hari & jam
     ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     pivot_table = pivot_table.reindex(ordered_days)
-    pivot_table = pivot_table[[hour for hour in range(11, 23), fill_value=0]]
+    pivot_table = pivot_table.reindex(columns=range(11, 23), fill_value=0)
 
     # Tambahkan total per baris (hari)
     pivot_table['Total'] = pivot_table.sum(axis=1)
