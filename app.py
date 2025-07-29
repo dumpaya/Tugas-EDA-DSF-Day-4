@@ -182,18 +182,30 @@ elif tab == "🗕 EDA Bulanan":
     ax4.set_title("Penjualan per Ukuran")
     st.pyplot(fig4)
 
-        # ==========================
-    # 🔥 Peak Hours Bulanan - Tabel Heatmap (11 AM - 10 PM)
     # ==========================
-    st.markdown("### 🔥 Peak Hours Bulanan (11:00 AM – 10:00 PM)")
+    # 🔥 Peak Hours Bulanan (10:00 AM – 9:00 PM)
+    # ==========================
+    st.markdown("### 🔥 Peak Hours Bulanan (10:00 AM – 9:00 PM)")
 
-    monthly_df['hour'] = monthly_df['order_date'].dt.hour
-    monthly_df['day_name'] = monthly_df['order_date'].dt.day_name()
+    # Pastikan order_date tipe datetime
+    df['order_date'] = pd.to_datetime(df['order_date'])
+
+    # Ambil data bulan terpilih
+    monthly_df = df[df['order_date'].dt.month == selected_month].copy()
+
+    # Gabungkan tanggal dan jam → datetime penuh
+    monthly_df['order_datetime'] = pd.to_datetime(
+        monthly_df['order_date'].dt.date.astype(str) + ' ' + monthly_df['order_time'].astype(str)
+    )
+
+    # Ekstrak jam dan hari
+    monthly_df['hour'] = monthly_df['order_datetime'].dt.hour
+    monthly_df['day_name'] = monthly_df['order_datetime'].dt.day_name()
 
     # Filter hanya jam 10 - 21
-    jam_filter = monthly_df[(monthly_df['hour'] >= 11) & (monthly_df['hour'] <= 22)]
+    jam_filter = monthly_df[(monthly_df['hour'] >= 10) & (monthly_df['hour'] <= 21)]
 
-    # Pivot: Hari vs Jam
+    # Pivot table: Hari vs Jam
     pivot_table = jam_filter.pivot_table(
         index='day_name',
         columns='hour',
@@ -202,15 +214,15 @@ elif tab == "🗕 EDA Bulanan":
         fill_value=0
     )
 
-    # Urutkan hari dan jam
+    # Urutkan hari & jam
     ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     pivot_table = pivot_table.reindex(ordered_days)
     pivot_table = pivot_table[[hour for hour in range(10, 22)]]
 
-    # Tambah total per hari (baris)
+    # Tambahkan total per baris (hari)
     pivot_table['Total'] = pivot_table.sum(axis=1)
 
-    # Tambah total per jam (kolom)
+    # Tambahkan total per kolom (jam)
     total_row = pivot_table.sum(numeric_only=True).to_frame().T
     total_row.index = ['Total']
     pivot_table = pd.concat([pivot_table, total_row])
