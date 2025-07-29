@@ -196,7 +196,7 @@ elif tab == "🗕 EDA Bulanan":
     # ==========================
     # === Peak Hours (Gabung Col2 + Col3 Seperti Merge & Center) ===
     with st.container():
-        col_spacer1, col_merge, col_spacer2 = st.columns([3, 6, 1])
+        col_spacer1, col_merge, col_spacer2 = st.columns([3.5, 6, 0])
         with col_merge:
             st.markdown("### 🔥 Peak Hours Bulanan (11:00 AM – 10:00 PM)")
     
