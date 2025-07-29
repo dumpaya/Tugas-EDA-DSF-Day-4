@@ -140,7 +140,7 @@ elif tab == "🗕 EDA Bulanan":
 
     st.markdown("### 🔢 Ringkasan Bulan: " + bulan_nama[selected_month])
     # ======= Layout: 3 Kolom Utama =======
-    col1, col2, col3 = st.columns([1, 1, 1])
+    col1, col2, col3 = st.columns([0.5, 1.25, 1.25])
     
     # === Ringkasan Bulanan (Col 1) ===
     with col1:
