@@ -25,13 +25,13 @@ model = load_model()
 
 # Sidebar menu
 st.sidebar.title("Navigasi")
-tab = st.sidebar.radio("Pilih Halaman", ["📈 EDA Global", "🗕 EDA Bulanan", "📈 Prediksi"])
+tab = st.sidebar.radio("Pilih Halaman", ["📊 EDA Global", "🗓️ EDA Bulanan", "📈 Prediksi"])
 
 # ==========================
 # EDA GLOBAL
 # ==========================
-if tab == "📈 EDA Global":
-    st.title("📈 Exploratory Data Analysis - Global")
+if tab == "📊 EDA Global":
+    st.title("📊 Exploratory Data Analysis - Global")
 
     with st.expander("📄 Lihat Data Mentah"):
         st.dataframe(df, use_container_width=True)
@@ -120,8 +120,8 @@ if tab == "📈 EDA Global":
 # ==========================
 # EDA BULANAN (Tampilan Visual Seperti Dashboard)
 # ==========================
-elif tab == "🗕 EDA Bulanan":
-    st.title("🗕 EDA Bulanan: Analisis Penjualan Pizza")
+elif tab == "🗓️ EDA Bulanan":
+    st.title("🗓️ EDA Bulanan: Analisis Penjualan Pizza")
 
     bulan_nama = {
         1: "Januari", 2: "Februari", 3: "Maret", 4: "April",
@@ -192,13 +192,13 @@ elif tab == "🗕 EDA Bulanan":
         st.pyplot(fig4)
 
     # ==========================
-    # 🔥 Peak Hours Bulanan (10:00 AM – 9:00 PM)
+    # 📄 Peak Hours Bulanan (10:00 AM – 9:00 PM)
     # ==========================
     # === Peak Hours (Gabung Col2 + Col3 Seperti Merge & Center) ===
     with st.container():
         col_spacer1, col_merge, col_spacer2 = st.columns([1.5, 6, 0.05])
         with col_merge:
-            st.markdown("### 🔥 Peak Hours Bulanan (11:00 AM – 10:00 PM)")
+            st.markdown("### 📄 Peak Hours Bulanan (11:00 AM – 10:00 PM)")
     
             # --- Gunakan kode peak hour yang sudah benar ---
             df['order_date'] = pd.to_datetime(df['order_date'])
