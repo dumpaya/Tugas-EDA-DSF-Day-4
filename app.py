@@ -182,16 +182,19 @@ elif tab == "🗕 EDA Bulanan":
     ax4.set_title("Penjualan per Ukuran")
     st.pyplot(fig4)
 
+        # ==========================
+    # 🔥 Peak Hours Bulanan - Tabel Heatmap (11 AM - 10 PM)
     # ==========================
-    # 🔥 Peak Hours Bulanan - Tabel Heatmap
-    # ==========================
-    st.markdown("### 🔥 Peak Hours Bulanan (Tabel Jam Sibuk)")
+    st.markdown("### 🔥 Peak Hours Bulanan (11:00 AM – 10:00 PM)")
 
     monthly_df['hour'] = monthly_df['order_date'].dt.hour
     monthly_df['day_name'] = monthly_df['order_date'].dt.day_name()
 
-    # Buat pivot table: Hari (rows) vs Jam (columns)
-    pivot_table = monthly_df.pivot_table(
+    # Filter hanya jam 10 - 21
+    jam_filter = monthly_df[(monthly_df['hour'] >= 11) & (monthly_df['hour'] <= 22)]
+
+    # Pivot: Hari vs Jam
+    pivot_table = jam_filter.pivot_table(
         index='day_name',
         columns='hour',
         values='order_id',
@@ -199,17 +202,20 @@ elif tab == "🗕 EDA Bulanan":
         fill_value=0
     )
 
-    # Urutkan hari agar sesuai minggu
+    # Urutkan hari dan jam
     ordered_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     pivot_table = pivot_table.reindex(ordered_days)
+    pivot_table = pivot_table[[hour for hour in range(10, 22)]]
 
-    # Tambahkan total di kanan dan bawah
+    # Tambah total per hari (baris)
     pivot_table['Total'] = pivot_table.sum(axis=1)
+
+    # Tambah total per jam (kolom)
     total_row = pivot_table.sum(numeric_only=True).to_frame().T
     total_row.index = ['Total']
     pivot_table = pd.concat([pivot_table, total_row])
 
-    # Tampilkan dengan warna gradasi seperti gambar (oranye ke merah)
+    # Format dan tampilkan
     st.dataframe(
         pivot_table.style
         .background_gradient(cmap='YlOrRd', axis=None)
