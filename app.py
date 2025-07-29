@@ -209,8 +209,8 @@ elif tab == "🗕 EDA Bulanan":
     pivot_table = jam_filter.pivot_table(
         index='day_name',
         columns='hour',
-        values='order_id',
-        aggfunc='count',
+        values='quantity',
+        aggfunc='sum',
         fill_value=0
     )
 
